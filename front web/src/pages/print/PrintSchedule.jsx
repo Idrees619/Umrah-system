@@ -32,7 +32,23 @@ export default function PrintSchedule() {
   const [rows,    setRows]    = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetched, setFetched] = useState(false);
-
+@media print {
+  @page {
+    size: A4 landscape; /* يجبر المتصفح على اختيار الوضع الأفقي */
+    margin: 1cm;
+  }
+  
+  .print-page {
+    width: 100% !important;
+    min-width: 29cm; /* عرض الورقة الأفقية تقريباً */
+    direction: rtl;
+  }
+  
+  table {
+    width: 100% !important;
+    table-layout: fixed; /* يضمن عدم خروج الجدول عن حدود الورقة */
+  }
+}
   // قراءة الباراميترات من URL عند الفتح
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
