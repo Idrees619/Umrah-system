@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
-const API = 'http://localhost:3001/api';
+const API = 'https://umrah-system-backend.onrender.com/api';
 
 const TYPE_MAP = {'وصول':'arrival','تنقل':'transfer','مزارات':'visit','مغادرة':'departure'};
 const TYPE_LABEL = {'وصول':'Arrival','تنقل':'Transfer','مزارات':'Ziyarat','مغادرة':'Departure'};
