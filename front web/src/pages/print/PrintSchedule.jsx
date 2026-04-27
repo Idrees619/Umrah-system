@@ -204,19 +204,19 @@ export default function PrintSchedule() {
                   const isExt = m.driver_type === 'external';
                   return (
                     <tr key={m.id}>
-                      <td style={{color:'#999',fontSize:8}}>{i+1}</td>
+                      <td style={{color:'#000',fontSize:8}}>{i+1}</td>
                       <td style={{fontWeight:600,whiteSpace:'nowrap'}}>{m.movement_date}</td>
                       <td style={{fontWeight:700,color:'#c9a84c'}}>{m.movement_time?.slice(0,5)}</td>
                       <td><span className={`pt-arr ${TYPE_CSS[m.movement_type]||''}`}>{m.movement_type}</span></td>
                       <td>
                         <div style={{fontWeight:600}}>{m.guest_name||m.group_name||'—'}</div>
-                        <div style={{fontSize:8,color:'#777'}}>{m.company_name}</div>
+                        <div style={{fontSize:8,color:'#000'}}>{m.company_name}</div>
                       </td>
                       <td>{m.nationality||'—'}</td>
                       <td style={{textAlign:'center',fontWeight:700}}>{m.passenger_count}</td>
                       <td style={{fontSize:8}}>{m.from_location||m.from_city}</td>
                       <td style={{fontSize:8}}>{m.to_location||m.to_city}</td>
-                      <td style={{fontSize:8,color:'#555'}}>{m.flight_number||'—'}</td>
+                      <td style={{fontSize:8,color:'#000'}}>{m.flight_number||'—'}</td>
                       <td style={{fontWeight:600}}>
                         {isExt ? (m.ext_driver_name||'—') : (m.driver_name||<span style={{color:'red'}}>⚠ لم يُعيَّن</span>)}
                       </td>
@@ -269,30 +269,30 @@ export default function PrintSchedule() {
                   const isExt = m.driver_type === 'external';
                   return (
                     <tr key={m.id}>
-                      <td style={{color:'#999',fontSize:8}}>{i+1}</td>
+                      <td style={{color:'#000',fontSize:8}}>{i+1}</td>
                       <td style={{fontWeight:600,whiteSpace:'nowrap'}}>{m.movement_date}</td>
                       <td style={{fontWeight:700,color:'#c9a84c'}}>{m.movement_time?.slice(0,5)}</td>
                       <td><span className={`pt-arr ${TYPE_CSS[m.movement_type]||''}`}>{m.movement_type}</span></td>
                       <td>
                         <div style={{fontWeight:600}}>{m.guest_name||m.group_name||'—'}</div>
-                        <div style={{fontSize:8,color:'#777'}}>#{m.booking_number}</div>
+                        <div style={{fontSize:8,color:'#000'}}>#{m.booking_number}</div>
                       </td>
                       <td style={{fontSize:8}}>
                         <div>{m.agent_name||m.company_name||'—'}</div>
-                        {m.agent_phone&&<div style={{color:'#555'}}>{m.agent_phone}</div>}
+                        {m.agent_phone&&<div style={{color:'#000'}}>{m.agent_phone}</div>}
                       </td>
                       <td>{m.nationality||'—'}</td>
                       <td style={{textAlign:'center',fontWeight:700}}>{m.passenger_count}</td>
                       <td style={{fontSize:8}}>{m.from_location||m.from_city}</td>
                       <td style={{fontSize:8}}>{m.to_location||m.to_city}</td>
-                      <td style={{fontSize:8,color:'#555'}}>{m.flight_number||'—'}</td>
+                      <td style={{fontSize:8,color:'#000'}}>{m.flight_number||'—'}</td>
                       <td style={{fontWeight:600,fontSize:9}}>
                         {isExt ? (m.ext_driver_name||'—') : (m.driver_name||<span style={{color:'red'}}>⚠</span>)}
                       </td>
                       <td style={{fontSize:8}}>
                         {isExt ? (m.supplier_phone||'—') : (m.driver_phone||'—')}
                       </td>
-                      <td style={{fontSize:8,color:'#555'}}>
+                      <td style={{fontSize:8,color:'#000'}}>
                         {isExt ? '—' : (m.driver_id_number||'—')}
                       </td>
                       <td style={{fontSize:8}}>{m.plate_number||m.ext_plate_number||'—'}</td>
@@ -307,7 +307,7 @@ export default function PrintSchedule() {
           )}
 
           {rows.length === 0 && (
-            <div style={{textAlign:'center',padding:30,color:'#aaa',fontSize:12}}>
+            <div style={{textAlign:'center',padding:30,color:'#000',fontSize:12}}>
               لا توجد حركات تطابق الفلتر المحدد
             </div>
           )}
