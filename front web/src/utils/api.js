@@ -1,5 +1,5 @@
 import axios from 'axios';
-const api = axios.create({ baseURL: 'https://umrah-system-backend.onrender.com', timeout: 15000 });
+const api = axios.create({ baseURL: 'https://umrah-system-backend.onrender.com/api', timeout: 15000 });
 export default api;
 
 export const getMovements      = p  => api.get('/movements', { params: p });
