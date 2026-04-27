@@ -26,13 +26,13 @@ export default function PrintSchedule() {
   const [company,    setCompany]    = useState('');
   const [nat,        setNat]        = useState('');
   const [statusF,    setStatusF]    = useState('');
-  const [printMode,  setPrintMode]  = useState('delegate'); // delegate | agent
+  const [printMode,  setPrintMode]  = useState('delegate');
 
   const [rows,    setRows]    = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetched, setFetched] = useState(false);
 
-  // دالة تنسيق التاريخ من ISO إلى تاريخ عربي قصير (اختياري)
+  // دالة تنسيق التاريخ
   const fmtDate = (str) => {
     if (!str) return '—';
     try {
@@ -42,7 +42,6 @@ export default function PrintSchedule() {
     } catch { return str; }
   };
 
-  // قراءة الباراميترات من URL عند الفتح
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
     if (p.get('date'))         { setDateFrom(p.get('date')); setDateTo(p.get('date')); }
@@ -82,7 +81,7 @@ export default function PrintSchedule() {
 
   return (
     <div className="print-wrap">
-      {/* ── إعدادات الطباعة المضمنة ── */}
+      {/* أنماط الطباعة المضمنة */}
       <style>{`
         @media print {
           @page {
@@ -109,7 +108,6 @@ export default function PrintSchedule() {
             border-color: #ccc !important;
             font-weight: 500 !important;
           }
-          /* الحفاظ على ألوان الشارات */
           .pt-arr, .sb-done, .sb-active, .sb-pending, .sb-review {
             color: #fff !important;
             -webkit-print-color-adjust: exact;
@@ -127,7 +125,7 @@ export default function PrintSchedule() {
         }
       `}</style>
 
-      {/* ── أدوات التحكم ── */}
+      {/* أدوات التحكم */}
       <div className="print-controls no-print">
         <span className="pc-lbl">من:</span>
         <input className="pc-inp" type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} />
@@ -187,7 +185,6 @@ export default function PrintSchedule() {
 
       {fetched && (
         <div className="print-page">
-          {/* رأس الصفحة */}
           <div className="p-header">
             <div>
               <h1>🕋 نظام نقل العمرة</h1>
@@ -203,7 +200,6 @@ export default function PrintSchedule() {
             </div>
           </div>
 
-          {/* شريط العنوان */}
           <div className="p-title-bar">
             <h2>
               {moveType || 'كل التحركات'}
@@ -214,7 +210,6 @@ export default function PrintSchedule() {
             <span>{rows.length} حركة</span>
           </div>
 
-          {/* ملخص */}
           <div className="p-sum">
             {[
               {l:'إجمالي الحركات', v:rows.length,                                        acc:true},
@@ -229,7 +224,6 @@ export default function PrintSchedule() {
             ))}
           </div>
 
-          {/* الجدول — للمندوب */}
           {printMode === 'delegate' && (
             <table className="p-table">
               <thead>
@@ -283,7 +277,6 @@ export default function PrintSchedule() {
             </table>
           )}
 
-          {/* الجدول — للوكيل */}
           {printMode === 'agent' && (
             <table className="p-table">
               <thead>
