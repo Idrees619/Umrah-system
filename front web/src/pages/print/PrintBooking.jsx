@@ -22,7 +22,6 @@ export default function PrintBooking() {
   if (loading) return <div style={{padding:30,textAlign:'center',fontFamily:'sans-serif'}}>⏳ جاري التحميل...</div>;
   if (!booking) return <div style={{padding:30,textAlign:'center',color:'red'}}>الحجز غير موجود</div>;
 
-  // ✨ دالة تنسيق التاريخ (تحوّل ISO إلى تاريخ عربي)
   const fmtDate = (str) => {
     if (!str) return '—';
     try {
@@ -48,7 +47,7 @@ export default function PrintBooking() {
       <div className="print-controls no-print">
         <button className="pc-btn pc-gold" onClick={() => window.print()}>🖨 طباعة / إرسال كـ PDF</button>
         <button className="pc-btn pc-gray" onClick={() => window.history.back()}>← رجوع</button>
-        <span style={{fontSize:11, color:'#333'}}>هذا التأكيد سيُرسل للوكيل كتأكيد باستلام الجدول</span>
+        <span style={{fontSize:11, color:'#000'}}>هذا التأكيد سيُرسل للوكيل كتأكيد باستلام الجدول</span>
       </div>
 
       <div className="print-page">
@@ -58,7 +57,7 @@ export default function PrintBooking() {
             <h1>🕋 نظام نقل العمرة</h1>
             <p>تأكيد استلام جدول الحجز</p>
           </div>
-          <div className="p-header-left" style={{color:'#111'}}>
+          <div className="p-header-left" style={{color:'#000'}}>
             <strong>Booking Confirmation</strong>
             رقم الحجز: #{booking.booking_number}<br/>
             تاريخ الإصدار: {now}
@@ -89,8 +88,8 @@ export default function PrintBooking() {
               {l:'الحالة',               v:booking.status},
             ].map(x=>(
               <div key={x.l} style={{display:'flex',marginBottom:4,fontSize:9}}>
-                <span style={{color:'#333', minWidth:110}}>{x.l}:</span>
-                <span style={{fontWeight:600, color:'#111'}}>{x.v}</span>
+                <span style={{color:'#000', minWidth:110}}>{x.l}:</span>
+                <span style={{fontWeight:600, color:'#000'}}>{x.v}</span>
               </div>
             ))}
           </div>
@@ -106,12 +105,12 @@ export default function PrintBooking() {
               {l:'جوال الوكيل',           v:booking.agent_phone||'—'},
             ].map(x=>(
               <div key={x.l} style={{display:'flex',marginBottom:4,fontSize:9}}>
-                <span style={{color:'#333', minWidth:110}}>{x.l}:</span>
-                <span style={{fontWeight:600, color:'#111'}}>{x.v}</span>
+                <span style={{color:'#000', minWidth:110}}>{x.l}:</span>
+                <span style={{fontWeight:600, color:'#000'}}>{x.v}</span>
               </div>
             ))}
             {booking.notes && (
-              <div style={{marginTop:10,padding:'7px 9px',background:'#fafaf8',borderRadius:4,fontSize:8,color:'#222'}}>
+              <div style={{marginTop:10,padding:'7px 9px',background:'#fafaf8',borderRadius:4,fontSize:8,color:'#000'}}>
                 <strong>ملاحظات:</strong> {booking.notes}
               </div>
             )}
@@ -160,20 +159,20 @@ export default function PrintBooking() {
                 m.movement_type==='تنقل'?'#a78bfa':
                 m.movement_type==='مزارات'?'#fbbf24':'#fb7185'
               }`}}>
-                <td style={{color:'#333'}}>{i+1}</td>
-                <td style={{fontWeight:700,whiteSpace:'nowrap'}}>{fmtDate(m.movement_date)}</td>
+                <td style={{color:'#000'}}>{i+1}</td>
+                <td style={{fontWeight:700,whiteSpace:'nowrap',color:'#000'}}>{fmtDate(m.movement_date)}</td>
                 <td style={{fontWeight:700,color:'#c9a84c'}}>{(m.movement_time||'—').slice(0,5)}</td>
                 <td>
                   <span className={`pt-arr ${TYPE_CSS_MAP[m.movement_type]||''}`}>
                     {m.movement_type}
                   </span>
                 </td>
-                <td style={{fontSize:8,fontWeight:600,color:'#222'}}>{m.from_city||'—'}</td>
-                <td style={{fontSize:8,fontWeight:600,color:'#222'}}>{m.to_city||'—'}</td>
-                <td style={{fontSize:8,color:'#222'}}>{m.from_location||'—'}</td>
-                <td style={{fontSize:8,color:'#222'}}>{m.to_location||'—'}</td>
-                <td style={{fontSize:8,color:'#222'}}>{m.flight_number||'—'}</td>
-                <td style={{textAlign:'center'}}>{m.bus_count||1}</td>
+                <td style={{fontSize:8,fontWeight:600,color:'#000'}}>{m.from_city||'—'}</td>
+                <td style={{fontSize:8,fontWeight:600,color:'#000'}}>{m.to_city||'—'}</td>
+                <td style={{fontSize:8,color:'#000'}}>{m.from_location||'—'}</td>
+                <td style={{fontSize:8,color:'#000'}}>{m.to_location||'—'}</td>
+                <td style={{fontSize:8,color:'#000'}}>{m.flight_number||'—'}</td>
+                <td style={{textAlign:'center',color:'#000'}}>{m.bus_count||1}</td>
                 <td>
                   <span className={`pt-arr ${
                     m.status==='منتهي'?'sb-done':
@@ -186,14 +185,14 @@ export default function PrintBooking() {
         </table>
 
         {movements.length === 0 && (
-          <div style={{textAlign:'center',padding:20,color:'#444',fontSize:11}}>
+          <div style={{textAlign:'center',padding:20,color:'#000',fontSize:11}}>
             لا توجد خطوات مُدخلة بعد
           </div>
         )}
 
         {/* إشعار التأكيد */}
-        <div style={{margin:'14px 0',padding:'10px 14px',background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:6,fontSize:9,color:'#0369a1'}}>
-          <strong>إشعار تأكيد:</strong> هذا المستند يُقرّ باستلام شركة نقل العمرة لجدول المجموعة المذكورة أعلاه وتأكيد تنفيذ خطوات النقل المُدرجة. أي تعديل على الجدول سيتم إشعاركم به مسبقاً.
+        <div style={{margin:'14px 0',padding:'10px 14px',background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:6,fontSize:9,color:'#000'}}>
+          <strong>إشعار تأكيد:</strong> هذا المستند يُقرّ باستلام شركة نقل العمرة لجدول المجموعة المذكورة أعلاه وتأكيد تنفيذ خطوات النقل المُدرجة. أي تعديل على الجدول نرجو ابلاغنا به قبلها ب48 ساعة.
         </div>
 
         {/* توقيع */}
@@ -201,7 +200,7 @@ export default function PrintBooking() {
           {['توقيع المشرف / المندوب','توقيع الوكيل / العميل','ختم الشركة'].map(s=>(
             <div key={s} style={{textAlign:'center'}}>
               <div style={{height:35,borderBottom:'1px solid #ccc',marginBottom:5}}/>
-              <div style={{fontSize:8,color:'#333'}}>{s}</div>
+              <div style={{fontSize:8,color:'#000'}}>{s}</div>
             </div>
           ))}
         </div>
