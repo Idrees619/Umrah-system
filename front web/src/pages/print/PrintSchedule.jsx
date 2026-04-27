@@ -17,7 +17,6 @@ const STATUS_CSS = {
 };
 
 export default function PrintSchedule() {
-  // ── فلاتر ──
   const [dateFrom,   setDateFrom]   = useState('');
   const [dateTo,     setDateTo]     = useState('');
   const [moveType,   setMoveType]   = useState('');
@@ -32,23 +31,17 @@ export default function PrintSchedule() {
   const [rows,    setRows]    = useState([]);
   const [loading, setLoading] = useState(false);
   const [fetched, setFetched] = useState(false);
-@media print {
-  @page {
-    size: A4 landscape; /* يجبر المتصفح على اختيار الوضع الأفقي */
-    margin: 1cm;
-  }
-  
-  .print-page {
-    width: 100% !important;
-    min-width: 29cm; /* عرض الورقة الأفقية تقريباً */
-    direction: rtl;
-  }
-  
-  table {
-    width: 100% !important;
-    table-layout: fixed; /* يضمن عدم خروج الجدول عن حدود الورقة */
-  }
-}
+
+  // دالة تنسيق التاريخ من ISO إلى تاريخ عربي قصير (اختياري)
+  const fmtDate = (str) => {
+    if (!str) return '—';
+    try {
+      const d = new Date(str);
+      if (isNaN(d.getTime())) return str;
+      return d.toLocaleDateString('ar-SA', { year: 'numeric', month: '2-digit', day: '2-digit' });
+    } catch { return str; }
+  };
+
   // قراءة الباراميترات من URL عند الفتح
   useEffect(() => {
     const p = new URLSearchParams(window.location.search);
@@ -83,13 +76,57 @@ export default function PrintSchedule() {
   };
 
   const now    = new Date().toLocaleString('ar-SA');
-  const period = dateFrom === dateTo ? dateFrom : `${dateFrom} — ${dateTo}`;
+  const period = dateFrom === dateTo ? fmtDate(dateFrom) : `${fmtDate(dateFrom)} — ${fmtDate(dateTo)}`;
   const CITIES = ['مكة','مدينة','جدة','مطار-جدة','مطار-مدينة'];
-
   const modeLabel = printMode === 'delegate' ? 'للمندوب' : 'للوكيل';
 
   return (
     <div className="print-wrap">
+      {/* ── إعدادات الطباعة المضمنة ── */}
+      <style>{`
+        @media print {
+          @page {
+            size: A4 landscape;
+            margin: 0.8cm;
+          }
+          body {
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            color-adjust: exact;
+          }
+          .print-page {
+            width: 100% !important;
+            min-width: auto;
+            direction: rtl;
+          }
+          table {
+            width: 100% !important;
+            table-layout: fixed;
+            font-size: 9px !important;
+          }
+          th, td {
+            color: #000 !important;
+            border-color: #ccc !important;
+            font-weight: 500 !important;
+          }
+          /* الحفاظ على ألوان الشارات */
+          .pt-arr, .sb-done, .sb-active, .sb-pending, .sb-review {
+            color: #fff !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .sb-pending { background-color: #6b7280 !important; }
+          .sb-active  { background-color: #f59e0b !important; }
+          .sb-done    { background-color: #10b981 !important; }
+          .sb-review  { background-color: #f97316 !important; }
+          .pt-arrival   { background-color: #2dd4bf !important; color: #000 !important; }
+          .pt-transfer  { background-color: #a78bfa !important; }
+          .pt-visit     { background-color: #fbbf24 !important; color: #000 !important; }
+          .pt-departure { background-color: #fb7185 !important; }
+          .no-print { display: none !important; }
+        }
+      `}</style>
+
       {/* ── أدوات التحكم ── */}
       <div className="print-controls no-print">
         <span className="pc-lbl">من:</span>
@@ -129,7 +166,6 @@ export default function PrintSchedule() {
           {['مجدول','جاري','منتهي','ملغي','تحتاج-مراجعة'].map(s => <option key={s}>{s}</option>)}
         </select>
 
-        {/* نوع الطباعة */}
         <div style={{display:'flex',gap:6,alignItems:'center',borderRight:'1px solid #ccc',paddingRight:10}}>
           <span className="pc-lbl">وجهة الطباعة:</span>
           <button className={`pc-btn ${printMode==='delegate'?'pc-dark':'pc-gray'}`}
@@ -157,7 +193,7 @@ export default function PrintSchedule() {
               <h1>🕋 نظام نقل العمرة</h1>
               <p>تقرير حركات التشغيل — {modeLabel}</p>
             </div>
-            <div className="p-header-left">
+            <div className="p-header-left" style={{color:'#000'}}>
               <strong>جدول التحركات {modeLabel}</strong>
               الفترة: {period}<br />
               {moveType && `النوع: ${moveType} — `}
@@ -198,21 +234,11 @@ export default function PrintSchedule() {
             <table className="p-table">
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>التاريخ</th>
-                  <th>الوقت</th>
-                  <th>النوع</th>
-                  <th>المجموعة / الضيف</th>
-                  <th>الجنسية</th>
-                  <th>العدد</th>
-                  <th>من (فندق)</th>
-                  <th>إلى (فندق)</th>
-                  <th>رقم الرحلة</th>
-                  <th>الكابتن</th>
-                  <th>جوال الكابتن</th>
-                  <th>اللوحة</th>
-                  <th>داخلي/خارجي</th>
-                  <th>الحالة</th>
+                  <th>#</th><th>التاريخ</th><th>الوقت</th><th>النوع</th>
+                  <th>المجموعة / الضيف</th><th>الجنسية</th><th>العدد</th>
+                  <th>من (فندق)</th><th>إلى (فندق)</th><th>رقم الرحلة</th>
+                  <th>الكابتن</th><th>جوال الكابتن</th><th>اللوحة</th>
+                  <th>داخلي/خارجي</th><th>الحالة</th>
                 </tr>
               </thead>
               <tbody>
@@ -221,29 +247,29 @@ export default function PrintSchedule() {
                   return (
                     <tr key={m.id}>
                       <td style={{color:'#000',fontSize:8}}>{i+1}</td>
-                      <td style={{fontWeight:600,whiteSpace:'nowrap'}}>{m.movement_date}</td>
+                      <td style={{fontWeight:600,whiteSpace:'nowrap',color:'#000'}}>{fmtDate(m.movement_date)}</td>
                       <td style={{fontWeight:700,color:'#c9a84c'}}>{m.movement_time?.slice(0,5)}</td>
                       <td><span className={`pt-arr ${TYPE_CSS[m.movement_type]||''}`}>{m.movement_type}</span></td>
                       <td>
-                        <div style={{fontWeight:600}}>{m.guest_name||m.group_name||'—'}</div>
+                        <div style={{fontWeight:600,color:'#000'}}>{m.guest_name||m.group_name||'—'}</div>
                         <div style={{fontSize:8,color:'#000'}}>{m.company_name}</div>
                       </td>
-                      <td>{m.nationality||'—'}</td>
-                      <td style={{textAlign:'center',fontWeight:700}}>{m.passenger_count}</td>
-                      <td style={{fontSize:8}}>{m.from_location||m.from_city}</td>
-                      <td style={{fontSize:8}}>{m.to_location||m.to_city}</td>
+                      <td style={{color:'#000'}}>{m.nationality||'—'}</td>
+                      <td style={{textAlign:'center',fontWeight:700,color:'#000'}}>{m.passenger_count}</td>
+                      <td style={{fontSize:8,color:'#000'}}>{m.from_location||m.from_city}</td>
+                      <td style={{fontSize:8,color:'#000'}}>{m.to_location||m.to_city}</td>
                       <td style={{fontSize:8,color:'#000'}}>{m.flight_number||'—'}</td>
-                      <td style={{fontWeight:600}}>
+                      <td style={{fontWeight:600,color:'#000'}}>
                         {isExt ? (m.ext_driver_name||'—') : (m.driver_name||<span style={{color:'red'}}>⚠ لم يُعيَّن</span>)}
                       </td>
-                      <td style={{fontSize:8}}>
+                      <td style={{fontSize:8,color:'#000'}}>
                         {isExt ? (m.supplier_phone||'—') : (m.driver_phone||'—')}
                       </td>
-                      <td style={{fontSize:8}}>{m.plate_number||m.ext_plate_number||'—'}</td>
+                      <td style={{fontSize:8,color:'#000'}}>{m.plate_number||m.ext_plate_number||'—'}</td>
                       <td>
                         <span style={{fontSize:8,padding:'1px 5px',borderRadius:8,
                           background:isExt?'#fee2e2':'#d1fae5',
-                          color:isExt?'#7f1d1d':'#065f46'}}>
+                          color:'#000'}}>
                           {isExt ? 'خارجي' : 'داخلي'}
                         </span>
                       </td>
@@ -257,27 +283,16 @@ export default function PrintSchedule() {
             </table>
           )}
 
-          {/* الجدول — للوكيل (يُظهر بيانات السائق والجوال لتواصل الوكيل) */}
+          {/* الجدول — للوكيل */}
           {printMode === 'agent' && (
             <table className="p-table">
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>التاريخ</th>
-                  <th>الوقت</th>
-                  <th>النوع</th>
-                  <th>المجموعة / الضيف</th>
-                  <th>الوكيل / الشركة</th>
-                  <th>الجنسية</th>
-                  <th>العدد</th>
-                  <th>من</th>
-                  <th>إلى</th>
-                  <th>رحلة</th>
-                  <th>الكابتن</th>
-                  <th>جوال الكابتن</th>
-                  <th>رقم هوية الكابتن</th>
-                  <th>اللوحة</th>
-                  <th>الناقل</th>
+                  <th>#</th><th>التاريخ</th><th>الوقت</th><th>النوع</th>
+                  <th>المجموعة / الضيف</th><th>الوكيل / الشركة</th><th>الجنسية</th>
+                  <th>العدد</th><th>من</th><th>إلى</th><th>رحلة</th>
+                  <th>الكابتن</th><th>جوال الكابتن</th><th>رقم هوية الكابتن</th>
+                  <th>اللوحة</th><th>الناقل</th>
                 </tr>
               </thead>
               <tbody>
@@ -286,33 +301,33 @@ export default function PrintSchedule() {
                   return (
                     <tr key={m.id}>
                       <td style={{color:'#000',fontSize:8}}>{i+1}</td>
-                      <td style={{fontWeight:600,whiteSpace:'nowrap'}}>{m.movement_date}</td>
+                      <td style={{fontWeight:600,whiteSpace:'nowrap',color:'#000'}}>{fmtDate(m.movement_date)}</td>
                       <td style={{fontWeight:700,color:'#c9a84c'}}>{m.movement_time?.slice(0,5)}</td>
                       <td><span className={`pt-arr ${TYPE_CSS[m.movement_type]||''}`}>{m.movement_type}</span></td>
                       <td>
-                        <div style={{fontWeight:600}}>{m.guest_name||m.group_name||'—'}</div>
+                        <div style={{fontWeight:600,color:'#000'}}>{m.guest_name||m.group_name||'—'}</div>
                         <div style={{fontSize:8,color:'#000'}}>#{m.booking_number}</div>
                       </td>
-                      <td style={{fontSize:8}}>
+                      <td style={{fontSize:8,color:'#000'}}>
                         <div>{m.agent_name||m.company_name||'—'}</div>
                         {m.agent_phone&&<div style={{color:'#000'}}>{m.agent_phone}</div>}
                       </td>
-                      <td>{m.nationality||'—'}</td>
-                      <td style={{textAlign:'center',fontWeight:700}}>{m.passenger_count}</td>
-                      <td style={{fontSize:8}}>{m.from_location||m.from_city}</td>
-                      <td style={{fontSize:8}}>{m.to_location||m.to_city}</td>
+                      <td style={{color:'#000'}}>{m.nationality||'—'}</td>
+                      <td style={{textAlign:'center',fontWeight:700,color:'#000'}}>{m.passenger_count}</td>
+                      <td style={{fontSize:8,color:'#000'}}>{m.from_location||m.from_city}</td>
+                      <td style={{fontSize:8,color:'#000'}}>{m.to_location||m.to_city}</td>
                       <td style={{fontSize:8,color:'#000'}}>{m.flight_number||'—'}</td>
-                      <td style={{fontWeight:600,fontSize:9}}>
+                      <td style={{fontWeight:600,fontSize:9,color:'#000'}}>
                         {isExt ? (m.ext_driver_name||'—') : (m.driver_name||<span style={{color:'red'}}>⚠</span>)}
                       </td>
-                      <td style={{fontSize:8}}>
+                      <td style={{fontSize:8,color:'#000'}}>
                         {isExt ? (m.supplier_phone||'—') : (m.driver_phone||'—')}
                       </td>
                       <td style={{fontSize:8,color:'#000'}}>
                         {isExt ? '—' : (m.driver_id_number||'—')}
                       </td>
-                      <td style={{fontSize:8}}>{m.plate_number||m.ext_plate_number||'—'}</td>
-                      <td style={{fontSize:8}}>
+                      <td style={{fontSize:8,color:'#000'}}>{m.plate_number||m.ext_plate_number||'—'}</td>
+                      <td style={{fontSize:8,color:'#000'}}>
                         {isExt ? (m.supplier_name||'—') : 'داخلي'}
                       </td>
                     </tr>
@@ -328,7 +343,6 @@ export default function PrintSchedule() {
             </div>
           )}
 
-          {/* تذييل */}
           <div className="p-footer">
             <span>نظام نقل العمرة — تقرير التحركات {modeLabel}</span>
             <span>الفترة: {period}</span>
