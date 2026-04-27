@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const API = 'http://localhost:3001/api';
+const API = 'https://umrah-system-backend.onrender.com/api';
 
 export default function PrintAccounts() {
   const [dateFrom,  setDateFrom]  = useState('');
@@ -140,10 +140,10 @@ export default function PrintAccounts() {
                   <tbody>
                     {driversCalc.map((d,i)=>(
                       <tr key={d.id}>
-                        <td style={{color:'#999'}}>{i+1}</td>
+                        <td style={{color:'#000'}}>{i+1}</td>
                         <td style={{fontWeight:700}}>{d.name}</td>
                         <td style={{fontSize:8}}>{d.phone}</td>
-                        <td style={{fontSize:8,color:'#555'}}>{d.id_number||'—'}</td>
+                        <td style={{fontSize:8,color:'#000'}}>{d.id_number||'—'}</td>
                         <td style={{textAlign:'center'}}>{d.fTrips.length}</td>
                         <td style={{fontWeight:700,color:'#0369a1',textAlign:'left'}}>{d.earned.toFixed(0)}</td>
                         <td style={{fontWeight:700,color:'#15803d',textAlign:'left'}}>{d.paid.toFixed(0)}</td>
@@ -189,10 +189,10 @@ export default function PrintAccounts() {
                   <tbody>
                     {suppliersCalc.map((s,i)=>(
                       <tr key={s.id}>
-                        <td style={{color:'#999'}}>{i+1}</td>
+                        <td style={{color:'#000'}}>{i+1}</td>
                         <td style={{fontWeight:700}}>{s.name||s.supplier_name}</td>
                         <td style={{fontSize:8}}>{s.phone||'—'}</td>
-                        <td style={{fontSize:8,color:'#555'}}>{s.country||'—'}</td>
+                        <td style={{fontSize:8,color:'#000'}}>{s.country||'—'}</td>
                         <td style={{textAlign:'center'}}>{s.fTrips.length}</td>
                         <td style={{fontWeight:700,color:'#0369a1',textAlign:'left'}}>{s.earned.toFixed(0)}</td>
                         <td style={{fontWeight:700,color:'#15803d',textAlign:'left'}}>{s.paid.toFixed(0)}</td>
@@ -258,14 +258,14 @@ export default function PrintAccounts() {
                 <tbody>
                   {d.fTrips.map((t,i)=>(
                     <tr key={t.id}>
-                      <td style={{color:'#999'}}>{i+1}</td>
+                      <td style={{color:'#000'}}>{i+1}</td>
                       <td style={{fontWeight:600}}>{t.movement_date}</td>
                       <td style={{color:'#c9a84c',fontWeight:700}}>{t.movement_time?.slice(0,5)||'—'}</td>
                       <td><span className={`pt-arr pt-${{'وصول':'arrival','تنقل':'transfer','مزارات':'visit','مغادرة':'departure'}[t.movement_type]||'transfer'}`}>{t.movement_type}</span></td>
                       <td style={{fontSize:8}}>{t.from_city}</td>
                       <td style={{fontSize:8}}>{t.to_city}</td>
                       <td style={{fontWeight:600,fontSize:8}}>{t.group_name||'—'}</td>
-                      <td style={{fontSize:8,color:'#555'}}>{t.company_name||'—'}</td>
+                      <td style={{fontSize:8,color:'#000'}}>{t.company_name||'—'}</td>
                       <td style={{fontWeight:700,color:'#0369a1',textAlign:'left'}}>{parseFloat(t.trip_amount||0).toFixed(0)} ر.س</td>
                       <td><span className={`pt-arr ${t.payment_status==='مدفوع'?'sb-done':'sb-pending'}`}>{t.payment_status||'غير مدفوع'}</span></td>
                     </tr>
@@ -285,10 +285,10 @@ export default function PrintAccounts() {
                     <tbody>
                       {d.fPayments.map((p,i)=>(
                         <tr key={p.id}>
-                          <td style={{color:'#999'}}>{i+1}</td>
+                          <td style={{color:'#000'}}>{i+1}</td>
                           <td style={{fontWeight:600}}>{p.payment_date}</td>
                           <td>{p.payment_method}</td>
-                          <td style={{fontSize:8,color:'#555'}}>{p.notes||'—'}</td>
+                          <td style={{fontSize:8,color:'#000'}}>{p.notes||'—'}</td>
                           <td style={{fontWeight:700,color:'#15803d',textAlign:'left'}}>{parseFloat(p.amount).toFixed(0)} ر.س</td>
                         </tr>
                       ))}
@@ -350,7 +350,7 @@ export default function PrintAccounts() {
                 <tbody>
                   {s.fTrips.map((t,i)=>(
                     <tr key={t.id}>
-                      <td style={{color:'#999'}}>{i+1}</td>
+                      <td style={{color:'#000'}}>{i+1}</td>
                       <td style={{fontWeight:600}}>{t.movement_date}</td>
                       <td><span className={`pt-arr pt-${{'وصول':'arrival','تنقل':'transfer','مزارات':'visit','مغادرة':'departure'}[t.movement_type]||'transfer'}`}>{t.movement_type}</span></td>
                       <td style={{fontSize:8}}>{t.from_city}</td>
