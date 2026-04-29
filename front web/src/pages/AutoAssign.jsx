@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-const API = 'http://localhost:3001/api';
+const API = 'https://umrah-system-backend.onrender.com/api';
 
 const TYPE_CLS = {
   'وصول': 'bg-teal', 'تنقل': 'bg-purple',
