@@ -11,14 +11,15 @@ import Accounts       from './pages/Accounts';
 import PrintSchedule  from './pages/print/PrintSchedule';
 import PrintAccounts  from './pages/print/PrintAccounts';
 import PrintBooking   from './pages/print/PrintBooking';
-import AutoAssign     from './pages/AutoAssign';         // ✅ الإضافة الجديدة
+import AutoAssign     from './pages/AutoAssign';
+import Agents         from './pages/Agents';          // ✅ إضافة الوكلاء
 
 const NAV = [
   { section: 'التشغيل', items: [
     { to: '/',            icon: '⊞', label: 'الرئيسية'      },
     { to: '/schedule',    icon: '≡', label: 'جدول التحركات' },
     { to: '/bookings',    icon: '◻', label: 'الحجوزات'       },
-    { to: '/auto-assign', icon: '⚙', label: 'توزيع تلقائي'  },   // ✅ رابط جديد
+    { to: '/auto-assign', icon: '⚙', label: 'توزيع تلقائي'  },
   ]},
   { section: 'الأسطول', items: [
     { to: '/drivers',   icon: '◉', label: 'السائقون'       },
@@ -27,6 +28,9 @@ const NAV = [
   ]},
   { section: 'المالية', items: [
     { to: '/accounts',  icon: '＄', label: 'الحسابات'      },
+  ]},
+  { section: 'العملاء', items: [                         // ✅ قسم جديد (أو ضعها حيث تشاء)
+    { to: '/agents',    icon: '👤', label: 'الوكلاء'       },
   ]},
   { section: 'الطباعة', items: [
     { to: '/print/schedule', icon: '⎙', label: 'طباعة التحركات'  },
@@ -71,7 +75,7 @@ function Layout() {
     <Routes>
       <Route path="/print/schedule"    element={<PrintSchedule />} />
       <Route path="/print/accounts"    element={<PrintAccounts />} />
-      <Route path="/print/booking/:id" element={<PrintBooking />} />  {/* موجود مسبقاً */}
+      <Route path="/print/booking/:id" element={<PrintBooking />} />
     </Routes>
   );
 
@@ -89,7 +93,8 @@ function Layout() {
           <Route path="/vehicles"        element={<Vehicles />}    />
           <Route path="/suppliers"       element={<Suppliers />}   />
           <Route path="/accounts"        element={<Accounts />}    />
-          <Route path="/auto-assign"     element={<AutoAssign />}  />   {/* ✅ مسار جديد */}
+          <Route path="/auto-assign"     element={<AutoAssign />}  />
+          <Route path="/agents"          element={<Agents />}      />  {/* ✅ مسار الوكلاء */}
         </Routes>
       </main>
     </div>
