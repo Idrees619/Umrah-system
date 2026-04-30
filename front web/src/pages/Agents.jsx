@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 
-const API = 'https://umrah-system-backend.onrender.com';
-
+const API = 'https://umrah-system-backend.onrender.com/api';
 function AgentModal({ agent, onClose, onSaved }) {
   const isEdit = !!agent;
   const [f, setF] = useState({
