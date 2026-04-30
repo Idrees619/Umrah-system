@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getBooking, createBooking, updateBooking } from '../utils/api';
 
+const API = import.meta.env.VITE_API_URL; // لتوحيد الاتصال بالخادم الخلفي
+
 const TEMPLATES = [
   // --- مسارات 5 تحركات (شاملة) ---
   { 
@@ -72,7 +74,7 @@ export default function BookingForm() {
 
   const [f, setF] = useState({
     group_number:'',group_name:'',guest_name:'',company_name:'',
-    agent_name:'',agent_phone:'',nationality:'',passenger_count:'',
+    agent_name:'',agent_phone:'',agent_id:'',nationality:'',passenger_count:'',
     template_type:'',arrival_date:'',departure_date:'',
     status:'نشط',invoice_ref:'',notes:'',
   });
@@ -81,13 +83,48 @@ export default function BookingForm() {
   const [loading,setLoading]= useState(isEdit);
   const [err,    setErr]    = useState('');
 
+  // ════ بيانات الوكلاء للاختيار التلقائي ════
+  const [agentsList, setAgentsList] = useState([]);
+  const [agentSearch, setAgentSearch] = useState('');
+  const [showAgentDropdown, setShowAgentDropdown] = useState(false);
+  const nationalities = [...new Set(agentsList.map(a => a.nationality).filter(Boolean))];
+
+  useEffect(() => {
+    fetch(`${API}/agents`)
+      .then(r => r.json())
+      .then(j => setAgentsList(j.data || []))
+      .catch(() => {});
+  }, []);
+
+  // فلترة الوكلاء حسب النص المدخل
+  const filteredAgents = agentSearch
+    ? agentsList.filter(a =>
+        (a.name||'').toLowerCase().includes(agentSearch.toLowerCase()) ||
+        (a.phone||'').includes(agentSearch)
+      )
+    : agentsList;
+
+  // عند اختيار وكيل من القائمة
+  const selectAgent = (agent) => {
+    setF(p => ({
+      ...p,
+      agent_name: agent.name,
+      agent_phone: agent.phone || '',
+      agent_id: agent.id,
+      nationality: agent.nationality || p.nationality, // يملأ الجنسية فقط إذا كانت فارغة؟ أو دائماً يملأها للسماح بالتعديل لاحقاً لكن نضعها لتحديث الحقل
+    }));
+    setAgentSearch(agent.name); // عرض الاسم المختار في المربع
+    setShowAgentDropdown(false);
+  };
+
+  // ─── تحميل بيانات الحجز (تعديل) ───
   useEffect(()=>{
     if(!isEdit) return;
     getBooking(id).then(r=>{
       const b=r.data.data;
       setF({ group_number:b.group_number||'',group_name:b.group_name||'',guest_name:b.guest_name||'',
         company_name:b.company_name||'',agent_name:b.agent_name||'',agent_phone:b.agent_phone||'',
-        nationality:b.nationality||'',passenger_count:b.passenger_count||'',
+        agent_id:b.agent_id||'',nationality:b.nationality||'',passenger_count:b.passenger_count||'',
         template_type:b.template_type||'',arrival_date:b.arrival_date||'',
         departure_date:b.departure_date||'',status:b.status||'نشط',
         invoice_ref:b.invoice_ref||'',notes:b.notes||'',});
@@ -98,6 +135,7 @@ export default function BookingForm() {
         flight_number:m.flight_number||'',bus_count:m.bus_count||1,
         status:m.status||'مجدول',notes:m.notes||'',
       })));
+      setAgentSearch(b.agent_name||''); // لضبط مربع البحث عند التعديل
     }).finally(()=>setLoading(false));
   },[id,isEdit]);
 
@@ -160,7 +198,7 @@ export default function BookingForm() {
 
                 <div className="fg2">
                   <div className="fg"><label className="fl">رقم التشغيل</label>
-                    <input type="text" placeholder="تلقائي" value={f.group_number} onChange={e=>setF(p=>({...p,group_number:e.target.value}))}/></div>
+                    <input type="text" value={f.group_number} onChange={e=>setF(p=>({...p,group_number:e.target.value}))}/></div>
                   <div className="fg"><label className="fl">خط السير (القالب)</label>
                     <select value={f.template_type} onChange={e=>{ setF(p=>({...p,template_type:e.target.value})); applyTpl(e.target.value); }}>
                       <option value="">اختر القالب</option>
@@ -170,27 +208,81 @@ export default function BookingForm() {
                 </div>
 
                 <div className="fg"><label className="fl">اسم الضيف / المجموعة *</label>
-                  <input type="text" placeholder="مثال: أروز الكعبة — الهند" value={f.guest_name||f.group_name}
+                  <input type="text" value={f.guest_name||f.group_name}
                     onChange={e=>setF(p=>({...p,guest_name:e.target.value,group_name:e.target.value}))}/></div>
 
                 <div className="fg"><label className="fl">اسم المجموعة (الكشف)</label>
-                  <input type="text" placeholder="اسم المجموعة" value={f.group_name}
+                  <input type="text" value={f.group_name}
                     onChange={e=>setF(p=>({...p,group_name:e.target.value}))}/></div>
 
-                <div className="fg2">
-                  <div className="fg"><label className="fl">الوكيل الخارجي</label>
-                    <input type="text" placeholder="اسم الوكيل" value={f.agent_name} onChange={e=>setF(p=>({...p,agent_name:e.target.value}))}/></div>
-                  <div className="fg"><label className="fl">جوال الوكيل</label>
-                    <input type="text" placeholder="05xxxxxxxx" value={f.agent_phone} onChange={e=>setF(p=>({...p,agent_phone:e.target.value}))}/></div>
+                {/* ══════════ الوكيل الخارجي (بحثي) ══════════ */}
+                <div className="fg">
+                  <label className="fl">الوكيل الخارجي</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="text"
+                      value={agentSearch}
+                      onFocus={() => { setShowAgentDropdown(true); }}
+                      onBlur={() => setTimeout(() => setShowAgentDropdown(false), 200)}
+                      onChange={e => {
+                        setAgentSearch(e.target.value);
+                        setShowAgentDropdown(true);
+                        // إذا مسح النص بالكامل، نمسح بيانات الوكيل
+                        if (!e.target.value.trim()) {
+                          setF(p => ({ ...p, agent_name:'', agent_phone:'', agent_id:'' }));
+                        }
+                      }}
+                    />
+                    {showAgentDropdown && filteredAgents.length > 0 && (
+                      <div style={{
+                        position: 'absolute', top: '100%', left: 0, right: 0,
+                        background: 'var(--bg)', border: '1px solid var(--border)',
+                        borderRadius: '0 0 var(--r-md) var(--r-md)', zIndex: 10,
+                        maxHeight: 200, overflowY: 'auto'
+                      }}>
+                        {filteredAgents.map(agent => (
+                          <div
+                            key={agent.id}
+                            style={{
+                              padding: '6px 10px', cursor: 'pointer',
+                              fontSize: 12, borderBottom: '1px solid var(--border)',
+                              display: 'flex', justifyContent: 'space-between'
+                            }}
+                            onMouseDown={() => selectAgent(agent)}
+                          >
+                            <span>{agent.name}</span>
+                            <span style={{ color: 'var(--text3)', fontSize: 10 }}>{agent.phone || ''}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {/* جوال الوكيل (تلقائي) */}
+                <div className="fg">
+                  <label className="fl">جوال الوكيل</label>
+                  <input type="text" value={f.agent_phone} readOnly />
+                </div>
+
+                {/* الجنسية مع قائمة مساعدة */}
+                <div className="fg">
+                  <label className="fl">الجنسية</label>
+                  <input
+                    type="text"
+                    list="nationality-list"
+                    value={f.nationality}
+                    onChange={e => setF(p => ({ ...p, nationality: e.target.value }))}
+                  />
+                  <datalist id="nationality-list">
+                    {nationalities.map(n => <option key={n} value={n} />)}
+                  </datalist>
                 </div>
 
                 <div className="fg3">
-                  <div className="fg"><label className="fl">الجنسية</label>
-                    <input type="text" placeholder="الهند / مصر..." value={f.nationality} onChange={e=>setF(p=>({...p,nationality:e.target.value}))}/></div>
                   <div className="fg"><label className="fl">عدد المعتمرين *</label>
-                    <input type="number" placeholder="44" value={f.passenger_count} onChange={e=>setF(p=>({...p,passenger_count:e.target.value}))}/></div>
+                    <input type="number" value={f.passenger_count} onChange={e=>setF(p=>({...p,passenger_count:e.target.value}))}/></div>
                   <div className="fg"><label className="fl">رقم المجموعة</label>
-                    <input type="text" placeholder="900491812" value={f.group_number} onChange={e=>setF(p=>({...p,group_number:e.target.value}))}/></div>
+                    <input type="text" value={f.group_number} onChange={e=>setF(p=>({...p,group_number:e.target.value}))}/></div>
                 </div>
 
                 <div className="fg2">
@@ -202,14 +294,14 @@ export default function BookingForm() {
 
                 <div className="fg2">
                   <div className="fg"><label className="fl">الشركة / الناقل</label>
-                    <input type="text" placeholder="Tawaf طواف..." value={f.company_name} onChange={e=>setF(p=>({...p,company_name:e.target.value}))}/></div>
+                    <input type="text" value={f.company_name} onChange={e=>setF(p=>({...p,company_name:e.target.value}))}/></div>
                   <div className="fg"><label className="fl">الحالة</label>
                     <select value={f.status} onChange={e=>setF(p=>({...p,status:e.target.value}))}>
                       {STATUSES_BOOKING.map(s=><option key={s}>{s}</option>)}</select></div>
                 </div>
 
                 <div className="fg"><label className="fl">ملاحظات</label>
-                  <textarea value={f.notes} onChange={e=>setF(p=>({...p,notes:e.target.value}))} placeholder="أي ملاحظات إضافية..." style={{minHeight:48}}/></div>
+                  <textarea value={f.notes} onChange={e=>setF(p=>({...p,notes:e.target.value}))} style={{minHeight:48}}/></div>
               </div>
             </div>
 
@@ -276,9 +368,9 @@ export default function BookingForm() {
                             <select value={s.to_city||''} onChange={e=>upd(idx,'to_city',e.target.value)} style={{width:'100%',fontSize:11,padding:'3px 4px'}}>
                               {CITIES.map(c=><option key={c}>{c}</option>)}</select>
                           </td>
-                          <td><input type="text" value={s.from_location||''} onChange={e=>upd(idx,'from_location',e.target.value)} placeholder="الفندق / الموقع" style={{width:'100%',fontSize:11,padding:'3px 4px'}}/></td>
-                          <td><input type="text" value={s.to_location||''} onChange={e=>upd(idx,'to_location',e.target.value)} placeholder="الفندق / الموقع" style={{width:'100%',fontSize:11,padding:'3px 4px'}}/></td>
-                          <td><input type="text" value={s.flight_number||''} onChange={e=>upd(idx,'flight_number',e.target.value)} placeholder="SV-123" style={{width:'100%',fontSize:11,padding:'3px 4px'}}/></td>
+                          <td><input type="text" value={s.from_location||''} onChange={e=>upd(idx,'from_location',e.target.value)} style={{width:'100%',fontSize:11,padding:'3px 4px'}}/></td>
+                          <td><input type="text" value={s.to_location||''} onChange={e=>upd(idx,'to_location',e.target.value)} style={{width:'100%',fontSize:11,padding:'3px 4px'}}/></td>
+                          <td><input type="text" value={s.flight_number||''} onChange={e=>upd(idx,'flight_number',e.target.value)} style={{width:'100%',fontSize:11,padding:'3px 4px'}}/></td>
                           <td><input type="number" min="1" value={s.bus_count||1} onChange={e=>upd(idx,'bus_count',e.target.value)} style={{width:'100%',fontSize:11,padding:'3px 4px'}}/></td>
                           <td>
                             <select value={s.status||'مجدول'} onChange={e=>upd(idx,'status',e.target.value)} style={{width:'100%',fontSize:10,padding:'3px 2px'}}>
