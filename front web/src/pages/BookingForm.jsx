@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getBooking, createBooking, updateBooking } from '../utils/api';
 
-const API = import.meta.env.VITE_API_URL;
+const API = 'https://umrah-system-backend.onrender.com';
 
 const TEMPLATES = [
   { key: 'MAK-5-FULL', label: 'خمس خطوات (مكة ← مدينة)', steps: [
