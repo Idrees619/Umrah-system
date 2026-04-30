@@ -42,17 +42,20 @@ export default function BookingForm() {
   const isEdit = !!id;
 
   const [f, setF] = useState({
-    group_number:'', group_name:'', guest_name:'', company_name:'',
-    agent_name:'', agent_phone:'', agent_id:'', nationality:'', passenger_count:'',
+    group_name:'',          // أصبح الحقل الرئيسي
+    company_name:'',
+    agent_name:'', agent_phone:'', agent_id:'',
+    nationality:'', passenger_count:'',
     template_type:'', arrival_date:'', departure_date:'',
     status:'نشط', invoice_ref:'', notes:'', booking_number:'',
+    group_number:'',        // رقم المجموعة الاختياري (إن أردت)
   });
   const [steps, setSteps] = useState([]);
   const [saving, setSaving] = useState(false);
   const [loading, setLoading] = useState(isEdit);
   const [err, setErr] = useState('');
 
-  // ═══ بيانات الوكلاء ═══
+  // الوكلاء
   const [agentsList, setAgentsList] = useState([]);
   const [agentSearch, setAgentSearch] = useState('');
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
@@ -84,19 +87,22 @@ export default function BookingForm() {
     setShowAgentDropdown(false);
   };
 
-  // ─── تحميل بيانات الحجز ───
+  // تحميل بيانات الحجز عند التعديل
   useEffect(() => {
     if(!isEdit) return;
     getBooking(id).then(r => {
       const b = r.data.data;
       setF({
-        group_number: b.group_number||'', group_name: b.group_name||'', guest_name: b.guest_name||'',
-        company_name: b.company_name||'', agent_name: b.agent_name||'', agent_phone: b.agent_phone||'',
-        agent_id: b.agent_id||'', nationality: b.nationality||'', passenger_count: b.passenger_count||'',
-        template_type: b.template_type||'', arrival_date: b.arrival_date||'',
-        departure_date: b.departure_date||'', status: b.status||'نشط',
-        invoice_ref: b.invoice_ref||'', notes: b.notes||'',
-        booking_number: b.booking_number||'',
+        group_name: b.group_name || b.guest_name || '',  // نستخدم أياً منهما
+        company_name: b.company_name || '',
+        agent_name: b.agent_name || '', agent_phone: b.agent_phone || '',
+        agent_id: b.agent_id || '',
+        nationality: b.nationality || '', passenger_count: b.passenger_count || '',
+        template_type: b.template_type || '', arrival_date: b.arrival_date || '',
+        departure_date: b.departure_date || '', status: b.status || 'نشط',
+        invoice_ref: b.invoice_ref || '', notes: b.notes || '',
+        booking_number: b.booking_number || '',
+        group_number: b.group_number || '',
       });
       setSteps((b.movements||[]).map(m => ({
         movement_type: m.movement_type, from_city: m.from_city||'مكة', to_city: m.to_city||'مكة',
@@ -105,7 +111,7 @@ export default function BookingForm() {
         flight_number: m.flight_number||'', bus_count: m.bus_count||1,
         status: m.status||'مجدول', notes: m.notes||'',
       })));
-      setAgentSearch(b.agent_name||'');
+      setAgentSearch(b.agent_name || '');
     }).finally(() => setLoading(false));
   }, [id, isEdit]);
 
@@ -132,12 +138,17 @@ export default function BookingForm() {
   const mvStep = (i,d) => { const a=[...steps]; const t=a[i]; a[i]=a[i+d]; a[i+d]=t; setSteps(a); };
 
   const save = async () => {
-    if(!f.group_name && !f.guest_name){ setErr('اسم المجموعة أو الضيف مطلوب'); return; }
+    if(!f.group_name.trim()){ setErr('اسم المجموعة مطلوب'); return; }
     if(!f.passenger_count){ setErr('عدد المعتمرين مطلوب'); return; }
-    if(!f.agent_id){ setErr('يجب اختيار وكيل من قائمة الوكلاء المسجلين'); return; } // ✅ إجبار على الاختيار
+    if(!f.agent_id){ setErr('يجب اختيار وكيل من قائمة الوكلاء المسجلين'); return; }
     setSaving(true); setErr('');
     try {
-      const payload = { ...f, movements: steps.map((s,i) => ({...s, sort_order: i+1})) };
+      // تحضير البيانات للإرسال: نضيف guest_name فارغاً لأنه ليس مطلوباً لكن الحقل موجود بالقاعدة
+      const payload = {
+        ...f,
+        guest_name: '', // أو f.group_name
+        movements: steps.map((s,i) => ({...s, sort_order: i+1})),
+      };
       delete payload.booking_number;
       if(isEdit) await updateBooking(id, payload);
       else await createBooking(payload);
@@ -166,7 +177,7 @@ export default function BookingForm() {
 
       <div style={{flex:1,overflow:'auto',padding:16}}>
         <div style={{display:'grid',gridTemplateColumns:'380px 1fr',gap:14,height:'100%'}}>
-          {/* القسم الأيمن */}
+          {/* القسم الأيمن: البيانات */}
           <div style={{display:'flex',flexDirection:'column',gap:10,overflow:'auto'}}>
             <div className="card">
               <div className="card-hdr" style={{background:'var(--gold-dim)'}}>
@@ -190,19 +201,14 @@ export default function BookingForm() {
                   </div>
                 </div>
 
+                {/* ─ حقل اسم المجموعة (وحيد) ─ */}
                 <div className="fg">
-                  <label className="fl">اسم الضيف / المجموعة *</label>
-                  <input type="text" value={f.guest_name||f.group_name}
-                    onChange={e => setF(p=>({...p, guest_name:e.target.value, group_name:e.target.value}))} />
-                </div>
-
-                <div className="fg">
-                  <label className="fl">اسم المجموعة (الكشف)</label>
+                  <label className="fl">اسم المجموعة *</label>
                   <input type="text" value={f.group_name}
-                    onChange={e => setF(p=>({...p, group_name:e.target.value}))} />
+                    onChange={e => setF(p => ({...p, group_name: e.target.value}))} />
                 </div>
 
-                {/* ────── الوكيل (قائمة منسدلة فقط) ────── */}
+                {/* ─ الوكيل الخارجي (قائمة منسدلة) ─ */}
                 <div className="fg">
                   <label className="fl">الوكيل الخارجي *</label>
                   <div style={{ position: 'relative' }}>
@@ -275,7 +281,7 @@ export default function BookingForm() {
                 <div className="fg3">
                   <div className="fg"><label className="fl">عدد المعتمرين *</label>
                     <input type="number" value={f.passenger_count} onChange={e => setF(p=>({...p, passenger_count:e.target.value}))} /></div>
-                  <div className="fg"><label className="fl">مجموعة</label>
+                  <div className="fg"><label className="fl">مجموعة (اختياري)</label>
                     <input type="text" value={f.group_number} onChange={e => setF(p=>({...p, group_number:e.target.value}))} /></div>
                 </div>
 
@@ -317,7 +323,7 @@ export default function BookingForm() {
             )}
           </div>
 
-          {/* جدول الحركات */}
+          {/* القسم الأيسر: جدول الحركات */}
           <div className="card" style={{display:'flex',flexDirection:'column'}}>
             <div className="card-hdr">
               <span className="card-title">معلومات النقل — {steps.length} خطوة</span>
