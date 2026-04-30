@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getBooking, createBooking, updateBooking } from '../utils/api';
 
-const API = 'https://umrah-system-backend.onrender.com';
-
+const API = 'https://umrah-system-backend.onrender.com/api';
 const TEMPLATES = [
   { key: 'MAK-5-FULL', label: 'خمس خطوات (مكة ← مدينة)', steps: [
     { t: 'وصول', fc: 'مطار-جدة', tc: 'مكة', fl: 'مطار جدة', tl: 'فندق مكة', tm: '08:00', d: 0 },
