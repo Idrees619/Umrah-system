@@ -2,12 +2,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getBooking, createBooking, updateBooking } from '../utils/api';
 
-const API = import.meta.env.VITE_API_URL; // لتوحيد الاتصال بالخادم الخلفي
+const API = import.meta.env.VITE_API_URL; // تأكد من تعيين VITE_API_URL في Vercel
 
 const TEMPLATES = [
-  // --- مسارات 5 تحركات (شاملة) ---
-  { 
-    key: 'MAK-5-FULL', 
+  {
+    key: 'MAK-5-FULL',
     label: 'خمس خطوات (مكة ← مدينة)',
     steps: [
       { t: 'وصول',   fc: 'مطار-جدة', tc: 'مكة',    fl: 'مطار جدة',   tl: 'فندق مكة',    tm: '08:00', d: 0 },
@@ -17,8 +16,8 @@ const TEMPLATES = [
       { t: 'مغادرة', fc: 'مدينة',    tc: 'مطار-مدينة', fl: 'فندق المدينة', tl: 'مطار المدينة', tm: '16:00', d: 6 },
     ]
   },
-  { 
-    key: 'MED-5-FULL', 
+  {
+    key: 'MED-5-FULL',
     label: 'خمس خطوات (مدينة ← مكة)',
     steps: [
       { t: 'وصول',   fc: 'مطار-مدينة', tc: 'مدينة',  fl: 'مطار المدينة', tl: 'فندق المدينة', tm: '08:00', d: 0 },
@@ -28,10 +27,8 @@ const TEMPLATES = [
       { t: 'مغادرة', fc: 'مكة',       tc: 'مطار-جدة', fl: 'فندق مكة',   tl: 'مطار جدة',   tm: '16:00', d: 6 },
     ]
   },
-
-  // --- مسارات 3 تحركات (مختصرة) ---
-  { 
-    key: 'MAK-3-SHORT', 
+  {
+    key: 'MAK-3-SHORT',
     label: 'ثلاث خطوات (استقبال - تنقل - مغادرة)',
     steps: [
       { t: 'وصول',   fc: 'مطار-جدة', tc: 'مكة',    fl: 'مطار جدة',   tl: 'فندق مكة',    tm: '08:00', d: 0 },
@@ -39,51 +36,37 @@ const TEMPLATES = [
       { t: 'مغادرة', fc: 'مدينة',    tc: 'مطار-مدينة', fl: 'فندق المدينة', tl: 'مطار المدينة', tm: '16:00', d: 5 },
     ]
   },
-
-  // --- حركات مفردة (للحرية الكاملة) ---
-  { 
-    key: 'SINGLE-ARR', 
-    label: 'حركة واحدة: استقبال فقط', 
-    steps: [{ t: 'وصول', fc: 'مطار-جدة', tc: 'مكة', fl: 'مطار جدة', tl: 'فندق مكة', tm: '09:00', d: 0 }] 
-  },
-  { 
-    key: 'SINGLE-VISIT', 
-    label: 'حركة واحدة: مزارات فقط', 
-    steps: [{ t: 'مزارات', fc: 'مكة', tc: 'مكة', fl: 'فندق مكة', tl: 'مزارات مكة', tm: '08:00', d: 0 }] 
-  },
-  { 
-    key: 'SINGLE-TRANS', 
-    label: 'حركة واحدة: تنقل بين المدن', 
-    steps: [{ t: 'تنقل', fc: 'مكة', tc: 'مدينة', fl: 'فندق مكة', tl: 'فندق المدينة', tm: '10:00', d: 0 }] 
-  },
-
-  // --- خيار مخصص (يبدأ بجدول فارغ) ---
+  { key: 'SINGLE-ARR', label: 'حركة واحدة: استقبال فقط', steps: [{ t: 'وصول', fc: 'مطار-جدة', tc: 'مكة', fl: 'مطار جدة', tl: 'فندق مكة', tm: '09:00', d: 0 }] },
+  { key: 'SINGLE-VISIT', label: 'حركة واحدة: مزارات فقط', steps: [{ t: 'مزارات', fc: 'مكة', tc: 'مكة', fl: 'فندق مكة', tl: 'مزارات مكة', tm: '08:00', d: 0 }] },
+  { key: 'SINGLE-TRANS', label: 'حركة واحدة: تنقل بين المدن', steps: [{ t: 'تنقل', fc: 'مكة', tc: 'مدينة', fl: 'فندق مكة', tl: 'فندق المدينة', tm: '10:00', d: 0 }] },
   { key: 'CUSTOM', label: 'مخصص (إضافة يدوية)', steps: [] },
 ];
-const CITIES=['مكة','مدينة','جدة','مطار-جدة','مطار-مدينة','أخرى'];
-const TYPES=['وصول','تنقل','مزارات','مغادرة'];
-const TCLR={'وصول':'var(--teal)','تنقل':'var(--purple)','مزارات':'var(--amber)','مغادرة':'var(--coral)'};
-const STATUSES_BOOKING=['نشط','قيد التنفيذ','منتهي','ملغي','تحتاج-مراجعة','متابعة-فقط','نقل-مستأجر'];
+
+const CITIES = ['مكة','مدينة','جدة','مطار-جدة','مطار-مدينة','أخرى'];
+const TYPES = ['وصول','تنقل','مزارات','مغادرة'];
+const TCLR = {'وصول':'var(--teal)','تنقل':'var(--purple)','مزارات':'var(--amber)','مغادرة':'var(--coral)'};
+const STATUSES_BOOKING = ['نشط','قيد التنفيذ','منتهي','ملغي','تحتاج-مراجعة','متابعة-فقط','نقل-مستأجر'];
 
 function addDays(d,n){ if(!d)return''; const x=new Date(d); x.setDate(x.getDate()+n); return x.toISOString().split('T')[0]; }
 
 export default function BookingForm() {
   const navigate = useNavigate();
-  const { id }   = useParams();
-  const isEdit   = !!id;
+  const { id } = useParams();
+  const isEdit = !!id;
 
   const [f, setF] = useState({
-    group_number:'',group_name:'',guest_name:'',company_name:'',
-    agent_name:'',agent_phone:'',agent_id:'',nationality:'',passenger_count:'',
-    template_type:'',arrival_date:'',departure_date:'',
-    status:'نشط',invoice_ref:'',notes:'',
+    group_number:'', group_name:'', guest_name:'', company_name:'',
+    agent_name:'', agent_phone:'', agent_id:'', nationality:'', passenger_count:'',
+    template_type:'', arrival_date:'', departure_date:'',
+    status:'نشط', invoice_ref:'', notes:'', booking_number:'',
   });
-  const [steps,  setSteps]  = useState([]);
-  const [saving, setSaving] = useState(false);
-  const [loading,setLoading]= useState(isEdit);
-  const [err,    setErr]    = useState('');
 
-  // ════ بيانات الوكلاء للاختيار التلقائي ════
+  const [steps, setSteps] = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(isEdit);
+  const [err, setErr] = useState('');
+
+  // بيانات الوكلاء للاختيار التلقائي
   const [agentsList, setAgentsList] = useState([]);
   const [agentSearch, setAgentSearch] = useState('');
   const [showAgentDropdown, setShowAgentDropdown] = useState(false);
@@ -96,7 +79,6 @@ export default function BookingForm() {
       .catch(() => {});
   }, []);
 
-  // فلترة الوكلاء حسب النص المدخل
   const filteredAgents = agentSearch
     ? agentsList.filter(a =>
         (a.name||'').toLowerCase().includes(agentSearch.toLowerCase()) ||
@@ -104,69 +86,87 @@ export default function BookingForm() {
       )
     : agentsList;
 
-  // عند اختيار وكيل من القائمة
   const selectAgent = (agent) => {
     setF(p => ({
       ...p,
       agent_name: agent.name,
       agent_phone: agent.phone || '',
       agent_id: agent.id,
-      nationality: agent.nationality || p.nationality, // يملأ الجنسية فقط إذا كانت فارغة؟ أو دائماً يملأها للسماح بالتعديل لاحقاً لكن نضعها لتحديث الحقل
+      nationality: agent.nationality || p.nationality,
     }));
-    setAgentSearch(agent.name); // عرض الاسم المختار في المربع
+    setAgentSearch(agent.name);
     setShowAgentDropdown(false);
   };
 
-  // ─── تحميل بيانات الحجز (تعديل) ───
-  useEffect(()=>{
+  // تحميل بيانات الحجز (تعديل)
+  useEffect(() => {
     if(!isEdit) return;
-    getBooking(id).then(r=>{
-      const b=r.data.data;
-      setF({ group_number:b.group_number||'',group_name:b.group_name||'',guest_name:b.guest_name||'',
-        company_name:b.company_name||'',agent_name:b.agent_name||'',agent_phone:b.agent_phone||'',
-        agent_id:b.agent_id||'',nationality:b.nationality||'',passenger_count:b.passenger_count||'',
-        template_type:b.template_type||'',arrival_date:b.arrival_date||'',
-        departure_date:b.departure_date||'',status:b.status||'نشط',
-        invoice_ref:b.invoice_ref||'',notes:b.notes||'',});
-      setSteps((b.movements||[]).map(m=>({
-        movement_type:m.movement_type,from_city:m.from_city||'مكة',to_city:m.to_city||'مكة',
-        from_location:m.from_location||'',to_location:m.to_location||'',
-        movement_date:m.movement_date||'',movement_time:m.movement_time?.slice(0,5)||'09:00',
-        flight_number:m.flight_number||'',bus_count:m.bus_count||1,
-        status:m.status||'مجدول',notes:m.notes||'',
+    getBooking(id).then(r => {
+      const b = r.data.data;
+      setF({
+        group_number: b.group_number||'', group_name: b.group_name||'', guest_name: b.guest_name||'',
+        company_name: b.company_name||'', agent_name: b.agent_name||'', agent_phone: b.agent_phone||'',
+        agent_id: b.agent_id||'', nationality: b.nationality||'', passenger_count: b.passenger_count||'',
+        template_type: b.template_type||'', arrival_date: b.arrival_date||'',
+        departure_date: b.departure_date||'', status: b.status||'نشط',
+        invoice_ref: b.invoice_ref||'', notes: b.notes||'',
+        booking_number: b.booking_number||'', // رقم التشغيل التلقائي
+      });
+      setSteps((b.movements||[]).map(m => ({
+        movement_type: m.movement_type, from_city: m.from_city||'مكة', to_city: m.to_city||'مكة',
+        from_location: m.from_location||'', to_location: m.to_location||'',
+        movement_date: m.movement_date||'', movement_time: m.movement_time?.slice(0,5)||'09:00',
+        flight_number: m.flight_number||'', bus_count: m.bus_count||1,
+        status: m.status||'مجدول', notes: m.notes||'',
       })));
-      setAgentSearch(b.agent_name||''); // لضبط مربع البحث عند التعديل
-    }).finally(()=>setLoading(false));
-  },[id,isEdit]);
+      setAgentSearch(b.agent_name||'');
+    }).finally(() => setLoading(false));
+  }, [id, isEdit]);
 
   const applyTpl = (key) => {
-    const tpl=TEMPLATES.find(t=>t.key===key); if(!tpl) return;
-    const base=f.arrival_date||new Date().toISOString().split('T')[0];
-    setSteps(tpl.steps.map((s,i)=>({
-      movement_type:s.t, from_city:s.fc, to_city:s.tc,
-      from_location:s.fl, to_location:s.tl,
-      movement_date:addDays(base,s.d), movement_time:s.tm,
+    const tpl = TEMPLATES.find(t => t.key===key);
+    if(!tpl) return;
+    const base = f.arrival_date || new Date().toISOString().split('T')[0];
+    setSteps(tpl.steps.map((s,i) => ({
+      movement_type: s.t, from_city: s.fc, to_city: s.tc,
+      from_location: s.fl, to_location: s.tl,
+      movement_date: addDays(base, s.d), movement_time: s.tm,
       flight_number:'', bus_count:1, status:'مجدول', notes:'', sort_order:i+1,
     })));
-    setF(p=>({...p,template_type:key}));
+    setF(p => ({...p, template_type: key}));
   };
 
-  const upd = (i,k,v) => setSteps(p=>p.map((s,j)=>j===i?{...s,[k]:v}:s));
-  const addStep = () => setSteps(p=>[...p,{movement_type:'تنقل',from_city:'مكة',to_city:'مدينة',from_location:'',to_location:'',movement_date:f.arrival_date||'',movement_time:'09:00',flight_number:'',bus_count:1,status:'مجدول',notes:''}]);
-  const delStep = i => setSteps(p=>p.filter((_,j)=>j!==i));
-  const mvStep  = (i,d) => { const a=[...steps]; const t=a[i]; a[i]=a[i+d]; a[i+d]=t; setSteps(a); };
+  const upd = (i,k,v) => setSteps(p => p.map((s,j) => j===i ? {...s,[k]:v} : s));
+  const addStep = () => setSteps(p => [...p, {
+    movement_type:'تنقل', from_city:'مكة', to_city:'مدينة',
+    from_location:'', to_location:'', movement_date: f.arrival_date||'', movement_time:'09:00',
+    flight_number:'', bus_count:1, status:'مجدول', notes:''
+  }]);
+  const delStep = i => setSteps(p => p.filter((_,j) => j!==i));
+  const mvStep = (i,d) => {
+    const a = [...steps];
+    const t = a[i];
+    a[i] = a[i+d];
+    a[i+d] = t;
+    setSteps(a);
+  };
 
   const save = async () => {
-    if(!f.group_name&&!f.guest_name){setErr('اسم المجموعة أو الضيف مطلوب');return;}
-    if(!f.passenger_count){setErr('عدد المعتمرين مطلوب');return;}
-    setSaving(true);setErr('');
+    if(!f.group_name && !f.guest_name){ setErr('اسم المجموعة أو الضيف مطلوب'); return; }
+    if(!f.passenger_count){ setErr('عدد المعتمرين مطلوب'); return; }
+    setSaving(true); setErr('');
     try {
-      const payload={...f,movements:steps.map((s,i)=>({...s,sort_order:i+1}))};
-      if(isEdit) await updateBooking(id,payload);
-      else       await createBooking(payload);
+      const payload = { ...f, movements: steps.map((s,i) => ({...s, sort_order: i+1})) };
+      // إزالة booking_number لأنه تلقائي
+      delete payload.booking_number;
+      if(isEdit) await updateBooking(id, payload);
+      else await createBooking(payload);
       navigate('/bookings');
-    } catch(e){ setErr(e.response?.data?.error||'خطأ في الحفظ: '+e.message); }
-    finally{ setSaving(false); }
+    } catch(e) {
+      setErr(e.response?.data?.error || 'خطأ في الحفظ: ' + e.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   if(loading) return <div className="loading">⏳ جاري التحميل...</div>;
@@ -176,18 +176,19 @@ export default function BookingForm() {
       {/* شريط الأدوات */}
       <div style={{background:'var(--bg2)',borderBottom:'1px solid var(--border)',padding:'10px 18px',display:'flex',gap:10,alignItems:'center',flexShrink:0}}>
         <button className="btn btn-primary" onClick={save} disabled={saving}>
-          💾 {saving?'جاري الحفظ...':isEdit?'حفظ التعديلات':'حفظ الحجز'}
+          💾 {saving?'جاري الحفظ...': isEdit?'حفظ التعديلات':'حفظ الحجز'}
         </button>
         <button className="btn btn-ghost" onClick={()=>navigate('/bookings')}>↩ رجوع</button>
         <div style={{flex:1}}/>
-        <span style={{fontSize:13,fontWeight:700,color:'var(--gold)'}}>{isEdit?`تعديل حجز #${f.booking_number||id.slice(0,8)}`:'حجز جديد'}</span>
+        <span style={{fontSize:13,fontWeight:700,color:'var(--gold)'}}>
+          {isEdit ? `تعديل حجز #${f.booking_number || id.slice(0,8)}` : 'حجز جديد'}
+        </span>
       </div>
 
       {err && <div className="err-box" style={{margin:'8px 18px'}}>{err}</div>}
 
       <div style={{flex:1,overflow:'auto',padding:16}}>
         <div style={{display:'grid',gridTemplateColumns:'380px 1fr',gap:14,height:'100%'}}>
-
           {/* ─── القسم الأيمن: البيانات ─── */}
           <div style={{display:'flex',flexDirection:'column',gap:10,overflow:'auto'}}>
             <div className="card">
@@ -196,42 +197,56 @@ export default function BookingForm() {
               </div>
               <div className="card-body" style={{display:'flex',flexDirection:'column',gap:9}}>
 
+                {/* رقم التشغيل (تلقائي، غير قابل للتعديل) */}
                 <div className="fg2">
-                  <div className="fg"><label className="fl">رقم التشغيل</label>
-                    <input type="text" value={f.group_number} onChange={e=>setF(p=>({...p,group_number:e.target.value}))}/></div>
-                  <div className="fg"><label className="fl">خط السير (القالب)</label>
-                    <select value={f.template_type} onChange={e=>{ setF(p=>({...p,template_type:e.target.value})); applyTpl(e.target.value); }}>
+                  <div className="fg">
+                    <label className="fl">رقم التشغيل</label>
+                    <input
+                      type="text"
+                      value={f.booking_number || 'تلقائي'}
+                      readOnly
+                      style={{ background: 'var(--bg3)', color: f.booking_number ? '' : 'var(--text3)', fontStyle: f.booking_number ? 'normal' : 'italic' }}
+                    />
+                  </div>
+                  <div className="fg">
+                    <label className="fl">خط السير (القالب)</label>
+                    <select value={f.template_type} onChange={e => { setF(p=>({...p,template_type:e.target.value})); applyTpl(e.target.value); }}>
                       <option value="">اختر القالب</option>
-                      {TEMPLATES.map(t=><option key={t.key} value={t.key}>{t.label}</option>)}
+                      {TEMPLATES.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
                       <option value="CUSTOM">مخصص</option>
-                    </select></div>
+                    </select>
+                  </div>
                 </div>
 
-                <div className="fg"><label className="fl">اسم الضيف / المجموعة *</label>
+                <div className="fg">
+                  <label className="fl">اسم الضيف / المجموعة *</label>
                   <input type="text" value={f.guest_name||f.group_name}
-                    onChange={e=>setF(p=>({...p,guest_name:e.target.value,group_name:e.target.value}))}/></div>
+                    onChange={e => setF(p=>({...p, guest_name:e.target.value, group_name:e.target.value}))} />
+                </div>
 
-                <div className="fg"><label className="fl">اسم المجموعة (الكشف)</label>
+                <div className="fg">
+                  <label className="fl">اسم المجموعة (الكشف)</label>
                   <input type="text" value={f.group_name}
-                    onChange={e=>setF(p=>({...p,group_name:e.target.value}))}/></div>
+                    onChange={e => setF(p=>({...p, group_name:e.target.value}))} />
+                </div>
 
-                {/* ══════════ الوكيل الخارجي (بحثي) ══════════ */}
+                {/* الوكيل الخارجي (قائمة منسدلة مع بحث) */}
                 <div className="fg">
                   <label className="fl">الوكيل الخارجي</label>
                   <div style={{ position: 'relative' }}>
                     <input
                       type="text"
                       value={agentSearch}
-                      onFocus={() => { setShowAgentDropdown(true); }}
-                      onBlur={() => setTimeout(() => setShowAgentDropdown(false), 200)}
+                      onFocus={() => setShowAgentDropdown(true)}
                       onChange={e => {
                         setAgentSearch(e.target.value);
                         setShowAgentDropdown(true);
-                        // إذا مسح النص بالكامل، نمسح بيانات الوكيل
                         if (!e.target.value.trim()) {
                           setF(p => ({ ...p, agent_name:'', agent_phone:'', agent_id:'' }));
                         }
                       }}
+                      onBlur={() => setTimeout(() => setShowAgentDropdown(false), 300)}
+                      placeholder="ابحث عن وكيل..."
                     />
                     {showAgentDropdown && filteredAgents.length > 0 && (
                       <div style={{
@@ -243,28 +258,32 @@ export default function BookingForm() {
                         {filteredAgents.map(agent => (
                           <div
                             key={agent.id}
-                            style={{
-                              padding: '6px 10px', cursor: 'pointer',
-                              fontSize: 12, borderBottom: '1px solid var(--border)',
-                              display: 'flex', justifyContent: 'space-between'
+                            onMouseDown={(e) => {
+                              e.preventDefault(); // يمنع فقدان التركيز قبل الاختيار
+                              selectAgent(agent);
                             }}
-                            onMouseDown={() => selectAgent(agent)}
+                            style={{
+                              padding: '8px 12px', cursor: 'pointer',
+                              fontSize: 13, borderBottom: '1px solid var(--border)',
+                              display: 'flex', justifyContent: 'space-between',
+                              alignItems: 'center'
+                            }}
                           >
                             <span>{agent.name}</span>
-                            <span style={{ color: 'var(--text3)', fontSize: 10 }}>{agent.phone || ''}</span>
+                            <span style={{ color: 'var(--text3)', fontSize: 11 }}>{agent.phone || ''}</span>
                           </div>
                         ))}
                       </div>
                     )}
                   </div>
                 </div>
-                {/* جوال الوكيل (تلقائي) */}
+
                 <div className="fg">
                   <label className="fl">جوال الوكيل</label>
                   <input type="text" value={f.agent_phone} readOnly />
                 </div>
 
-                {/* الجنسية مع قائمة مساعدة */}
+                {/* الجنسية (مع قائمة مساعدة تلقائية) */}
                 <div className="fg">
                   <label className="fl">الجنسية</label>
                   <input
@@ -272,6 +291,7 @@ export default function BookingForm() {
                     list="nationality-list"
                     value={f.nationality}
                     onChange={e => setF(p => ({ ...p, nationality: e.target.value }))}
+                    placeholder="اختر أو أكتب الجنسية"
                   />
                   <datalist id="nationality-list">
                     {nationalities.map(n => <option key={n} value={n} />)}
@@ -279,29 +299,44 @@ export default function BookingForm() {
                 </div>
 
                 <div className="fg3">
-                  <div className="fg"><label className="fl">عدد المعتمرين *</label>
-                    <input type="number" value={f.passenger_count} onChange={e=>setF(p=>({...p,passenger_count:e.target.value}))}/></div>
-                  <div className="fg"><label className="fl">رقم المجموعة</label>
-                    <input type="text" value={f.group_number} onChange={e=>setF(p=>({...p,group_number:e.target.value}))}/></div>
+                  <div className="fg">
+                    <label className="fl">عدد المعتمرين *</label>
+                    <input type="number" value={f.passenger_count} onChange={e => setF(p=>({...p, passenger_count:e.target.value}))} />
+                  </div>
+                  <div className="fg">
+                    <label className="fl">مجموعة (اختياري)</label>
+                    <input type="text" value={f.group_number} onChange={e => setF(p=>({...p, group_number:e.target.value}))} />
+                  </div>
                 </div>
 
                 <div className="fg2">
-                  <div className="fg"><label className="fl">تاريخ الوصول</label>
-                    <input type="date" value={f.arrival_date} onChange={e=>setF(p=>({...p,arrival_date:e.target.value}))}/></div>
-                  <div className="fg"><label className="fl">تاريخ المغادرة</label>
-                    <input type="date" value={f.departure_date} onChange={e=>setF(p=>({...p,departure_date:e.target.value}))}/></div>
+                  <div className="fg">
+                    <label className="fl">تاريخ الوصول</label>
+                    <input type="date" value={f.arrival_date} onChange={e => setF(p=>({...p, arrival_date:e.target.value}))} />
+                  </div>
+                  <div className="fg">
+                    <label className="fl">تاريخ المغادرة</label>
+                    <input type="date" value={f.departure_date} onChange={e => setF(p=>({...p, departure_date:e.target.value}))} />
+                  </div>
                 </div>
 
                 <div className="fg2">
-                  <div className="fg"><label className="fl">الشركة / الناقل</label>
-                    <input type="text" value={f.company_name} onChange={e=>setF(p=>({...p,company_name:e.target.value}))}/></div>
-                  <div className="fg"><label className="fl">الحالة</label>
-                    <select value={f.status} onChange={e=>setF(p=>({...p,status:e.target.value}))}>
-                      {STATUSES_BOOKING.map(s=><option key={s}>{s}</option>)}</select></div>
+                  <div className="fg">
+                    <label className="fl">الشركة / الناقل</label>
+                    <input type="text" value={f.company_name} onChange={e => setF(p=>({...p, company_name:e.target.value}))} />
+                  </div>
+                  <div className="fg">
+                    <label className="fl">الحالة</label>
+                    <select value={f.status} onChange={e => setF(p=>({...p, status:e.target.value}))}>
+                      {STATUSES_BOOKING.map(s => <option key={s}>{s}</option>)}
+                    </select>
+                  </div>
                 </div>
 
-                <div className="fg"><label className="fl">ملاحظات</label>
-                  <textarea value={f.notes} onChange={e=>setF(p=>({...p,notes:e.target.value}))} style={{minHeight:48}}/></div>
+                <div className="fg">
+                  <label className="fl">ملاحظات</label>
+                  <textarea value={f.notes} onChange={e => setF(p=>({...p, notes:e.target.value}))} style={{minHeight:48}} />
+                </div>
               </div>
             </div>
 
@@ -310,13 +345,15 @@ export default function BookingForm() {
               <div className="card">
                 <div className="card-hdr"><span className="card-title">ملخص المسار</span></div>
                 <div className="card-body" style={{display:'flex',flexDirection:'column',gap:5}}>
-                  {steps.map((s,i)=>(
+                  {steps.map((s,i) => (
                     <div key={i} style={{display:'flex',alignItems:'center',gap:8}}>
                       <div style={{width:7,height:7,borderRadius:'50%',background:TCLR[s.movement_type],flexShrink:0}}/>
-                      <span style={{fontFamily:'IBM Plex Mono',fontSize:10,color:'var(--text3)',minWidth:80}}>{s.movement_date} {s.movement_time}</span>
+                      <span style={{fontFamily:'IBM Plex Mono',fontSize:10,color:'var(--text3)',minWidth:80}}>
+                        {s.movement_date} {s.movement_time}
+                      </span>
                       <span className="badge" style={{fontSize:8,background:'var(--bg3)',color:'var(--text2)'}}>{s.movement_type}</span>
                       <span style={{fontSize:10,color:'var(--text2)'}}>{s.from_city}←{s.to_city}</span>
-                      <span style={{fontSize:9,color:'var(--text3)',flex:1}}>{s.from_location&&`${s.from_location}`}</span>
+                      <span style={{fontSize:9,color:'var(--text3)',flex:1}}>{s.from_location}</span>
                     </div>
                   ))}
                 </div>
@@ -351,7 +388,7 @@ export default function BookingForm() {
                       </tr>
                     </thead>
                     <tbody>
-                      {steps.map((s,idx)=>(
+                      {steps.map((s,idx) => (
                         <tr key={idx} style={{borderRight:`2.5px solid ${TCLR[s.movement_type]||'var(--border)'}`}}>
                           <td style={{color:'var(--text3)',textAlign:'center'}}>{idx+1}</td>
                           <td>
